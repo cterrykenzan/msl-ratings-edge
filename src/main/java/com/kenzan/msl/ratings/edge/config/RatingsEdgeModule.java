@@ -13,45 +13,31 @@ import io.swagger.api.impl.RatingsEdgeApiOriginFilter;
 import io.swagger.api.impl.RatingsEdgeApiServiceImpl;
 import io.swagger.api.impl.RatingsEdgeSessionToken;
 import io.swagger.api.impl.RatingsEdgeSessionTokenImpl;
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.File;
-import java.util.Properties;
 
 /**
+ * Ratings Edge Module, a support class for Modules which reduces repetition and results in a more readable configuration
+ * if no archaius.configurationSource.additionalUrls property is passed in, archaius uses default configuration. See readme to
+ * understand how to pass in these variables
+ *
  * @author Kenzan
  */
 public class RatingsEdgeModule extends AbstractModule {
 
-  private String DEFAULT_CLIENT_PORT = "3000";
+    private String DEFAULT_CLIENT_PORT = "3000";
 
-  private final DynamicStringProperty CLIENT_PORT =
-          DynamicPropertyFactory.getInstance().getStringProperty("clientPort", DEFAULT_CLIENT_PORT);
+    private final DynamicStringProperty CLIENT_PORT =
+            DynamicPropertyFactory.getInstance().getStringProperty("clientPort", DEFAULT_CLIENT_PORT);
 
-  @Override
-  public void configure() {
-    configureArchaius();
-    bindConstant().annotatedWith(Names.named("clientPort")).to(CLIENT_PORT.get());
+    @Override
+    public void configure() {
+        bindConstant().annotatedWith(Names.named("clientPort")).to(CLIENT_PORT.get());
 
-    requestStaticInjection(RatingsEdgeApiServiceFactory.class);
-    requestStaticInjection(RatingsEdgeApiOriginFilter.class);
-    bind(RatingsEdgeSessionToken.class).to(RatingsEdgeSessionTokenImpl.class).in(
-            LazySingletonScope.get());
+        requestStaticInjection(RatingsEdgeApiServiceFactory.class);
+        requestStaticInjection(RatingsEdgeApiOriginFilter.class);
 
-    bind(RatingsEdgeService.class).to(RatingsEdgeServiceImpl.class).in(LazySingletonScope.get());
-    bind(RatingsEdgeApiService.class).to(RatingsEdgeApiServiceImpl.class).in(
-        LazySingletonScope.get());
-  }
+        bind(RatingsEdgeSessionToken.class).to(RatingsEdgeSessionTokenImpl.class).in(LazySingletonScope.get());
 
-  private void configureArchaius() {
-    Properties props = System.getProperties();
-    String ENV = props.getProperty("env");
-    if (StringUtils.isEmpty(ENV) || ENV.toLowerCase().contains("local")) {
-      String configUrl = "file://" + System.getProperty("user.dir") + "/../msl-ratings-edge-config/edge-config.properties";
-      File f = new File(configUrl);
-      if(f.exists() && !f.isDirectory()) {
-        System.setProperty("archaius.configurationSource.additionalUrls", configUrl);
-      }
+        bind(RatingsEdgeService.class).to(RatingsEdgeServiceImpl.class).in(LazySingletonScope.get());
+        bind(RatingsEdgeApiService.class).to(RatingsEdgeApiServiceImpl.class).in(LazySingletonScope.get());
     }
-  }
 }
